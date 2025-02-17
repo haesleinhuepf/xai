@@ -1,0 +1,23 @@
+name: genai-cpu
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11 
+  - jupyterlab 
+  - pytorch 
+  - torchvision 
+  - torchaudio 
+  - stackview 
+  - pandas 
+  - torchmetrics 
+  - scikit-learn 
+  - scikit-image
+  - seaborn
+  - pip
+  - pip:
+      - tqdm 
+      - shap
+prefix: C:\Users\haase\miniconda3\envs\xai-cpu

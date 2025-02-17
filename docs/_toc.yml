@@ -1,0 +1,23 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+
+parts:
+  - caption: Setup
+    chapters:
+    - file: 00_setup/readme.md
+    
+  - caption: SHAP Analysis
+    chapters:
+    - file: 30_shap/pixel_classifier.ipynb
+    - file: 30_shap/object_classification.ipynb
+
+  - caption: Grad-CAM
+    chapters:
+    - file: 60_grad-cam/classification_resnet.ipynb
+    
+  - caption: Links
+    chapters:
+    - file: imprint

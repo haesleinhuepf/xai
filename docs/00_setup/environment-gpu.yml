@@ -1,0 +1,25 @@
+name: genai-gpu
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11 
+  - jupyterlab 
+  - pytorch 
+  - torchvision 
+  - torchaudio
+  - pytorch-cuda=11.8 
+  - cudatoolkit=11.8
+  - stackview 
+  - pandas 
+  - torchmetrics 
+  - scikit-image
+  - scikit-learn 
+  - seaborn
+  - pip
+  - pip:
+      - tqdm
+      - shap
+prefix: C:\Users\haase\miniconda3\envs\xai-gpu
