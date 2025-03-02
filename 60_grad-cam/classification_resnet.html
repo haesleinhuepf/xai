@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Inspecting the intermediate results / layer outputs &#8212; Explainable Artificial Intelligence Notebooks</title>
+    <title>Gradient Class-Activation Maps (Grad-CAM) &#8212; Explainable Artificial Intelligence Notebooks</title>
   
   
   
@@ -159,7 +159,7 @@ const thebe_selector_output = ".output, .cell_output"
 
                     <li class="nav-item current active">
                       <a class="nav-link nav-internal" href="#">
-                        Inspecting the intermediate results / layer outputs
+                        Gradient Class-Activation Maps (Grad-CAM)
                       </a>
                     </li>
                 
@@ -263,7 +263,7 @@ const thebe_selector_output = ".output, .cell_output"
 
                     <li class="nav-item current active">
                       <a class="nav-link nav-internal" href="#">
-                        Inspecting the intermediate results / layer outputs
+                        Gradient Class-Activation Maps (Grad-CAM)
                       </a>
                     </li>
                 
@@ -353,7 +353,15 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Grad-CAM</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Inspecting the intermediate results / layer outputs</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Gradient Class-Activation Maps (Grad-CAM)</a></li>
+
+
+
+
+
+
+
+
 
 
 
@@ -515,7 +523,7 @@ title="Print to PDF"
             
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Inspecting the intermediate results / layer outputs</h1>
+    <h1>Gradient Class-Activation Maps (Grad-CAM)</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -527,12 +535,32 @@ title="Print to PDF"
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#">
-   Inspecting the intermediate results / layer outputs
+   Gradient Class-Activation Maps (Grad-CAM)
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#inspecting-the-output">
-   Inspecting the output
+  <a class="reference internal nav-link" href="#loading-the-model">
+   Loading the model
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#exampele-image-data-for-classification">
+   Exampele image data for classification
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#storing-feature-images-and-gradients">
+   Storing feature images and gradients
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#prediction-step">
+   Prediction step
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#inspecting-the-intermediate-results">
+   Inspecting the intermediate results
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
@@ -541,7 +569,27 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#summarizing-feature-images">
+   Summarizing feature images
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#overlay">
+   Overlay
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#class-activation-maps-for-different-classes">
+   Class activation maps for different classes
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#exercise">
+   Exercise
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#id1">
    Exercise
   </a>
  </li>
@@ -554,23 +602,13 @@ title="Print to PDF"
 
             <article class="bd-article" role="main">
               
-  <div class="cell docutils container">
+  <section id="gradient-class-activation-maps-grad-cam">
+<h1>Gradient Class-Activation Maps (Grad-CAM)<a class="headerlink" href="#gradient-class-activation-maps-grad-cam" title="Permalink to this heading">#</a></h1>
+<p>In this notebook we will use the <a class="reference external" href="https://arxiv.org/abs/1610.02391">Grad-CAM algorithm</a> to visualize which regions in an image dominate the decision for a specific class in a classification neural network. We visualize where the network is <em>looking</em>.</p>
+<div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torchvision.models</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">bia_bob</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">resnet50</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">resnet50</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">transforms</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">skimage.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">resize</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
@@ -581,40 +619,39 @@ title="Print to PDF"
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">Markdown</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualize_image_list</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResNet50_Weights</span> <span class="k">as</span> <span class="n">W</span>
 </pre></div>
 </div>
 </div>
 </div>
+</section>
+<section id="loading-the-model">
+<h1>Loading the model<a class="headerlink" href="#loading-the-model" title="Permalink to this heading">#</a></h1>
+<p>We use the <a class="reference external" href="https://arxiv.org/abs/1512.03385">ResNet</a> architecture and more specifically <a class="reference external" href="https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html">ResNet50</a>, a pretrained model for classifying images.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResNet50_Weights</span> <span class="k">as</span> <span class="n">W</span>
-<span class="n">classes</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">DEFAULT</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;categories&quot;</span><span class="p">]</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">resnet_model</span> <span class="o">=</span> <span class="n">resnet50</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">resnet_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>C:\Users\rober\miniforge3\envs\genai-gpu\Lib\site-packages\torchvision\models\_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for &#39;weights&#39; are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=ResNet50_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet50_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+</pre></div>
+</div>
+</div>
+</div>
+<p>It was trained on <a class="reference external" href="https://www.image-net.org/">ImageNet</a>. For academic purposes, we can print out some class names available in ImageNet.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">classes</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">DEFAULT</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;categories&quot;</span><span class="p">]</span>
 <span class="n">classes</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;tench&#39;, &#39;goldfish&#39;, &#39;great white shark&#39;, &#39;tiger shark&#39;, &#39;hammerhead&#39;]
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">class_to_idx</span> <span class="o">=</span> <span class="p">{</span><span class="bp">cls</span><span class="p">:</span> <span class="n">idx</span> <span class="k">for</span> <span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">classes</span><span class="p">)}</span>
-<span class="n">class_to_idx</span><span class="p">[</span><span class="s2">&quot;flagpole&quot;</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>557
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># classes</span>
 </pre></div>
 </div>
 </div>
@@ -631,28 +668,28 @@ title="Print to PDF"
 </div>
 </div>
 </div>
+<p>Here we use a dictionay as lookup-table to get the index of a specific class name. We will later use this to determine weights for specific classes.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">resnet_model</span> <span class="o">=</span> <span class="n">resnet50</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">class_to_idx</span> <span class="o">=</span> <span class="p">{</span><span class="bp">cls</span><span class="p">:</span> <span class="n">idx</span> <span class="k">for</span> <span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">classes</span><span class="p">)}</span>
+<span class="n">class_to_idx</span><span class="p">[</span><span class="s2">&quot;flagpole&quot;</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>C:\Users\rober\miniforge3\envs\genai-gpu\Lib\site-packages\torchvision\models\_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for &#39;weights&#39; are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=ResNet50_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet50_Weights.DEFAULT` to get the most up-to-date weights.
-  warnings.warn(msg)
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>557
 </pre></div>
 </div>
 </div>
 </div>
+</section>
+<section id="exampele-image-data-for-classification">
+<h1>Exampele image data for classification<a class="headerlink" href="#exampele-image-data-for-classification" title="Permalink to this heading">#</a></h1>
+<p>In the following we will us a cropped image licensed <a class="reference external" href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">CC-BY-SA</a> by HTW Dresden / Peter Sebb (<a class="reference external" href="https://de.wikipedia.org/wiki/Hochschule_f%C3%BCr_Technik_und_Wirtschaft_Dresden#/media/Datei:Hochschule_f%C3%BCr_Technik_und_Wirtschaft_(HTW)_Dresden_-_Zentralgeb%C3%A4ude,_Campus_Friedrich_List_Platz.jpg">Source</a>).</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the image</span>
-<span class="n">original_image</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="s2">&quot;htw-front-cc-by-sa.png&quot;</span><span class="p">)[</span><span class="o">...</span><span class="p">,:</span><span class="mi">3</span><span class="p">]</span> <span class="c1"># Licensed CC-BY-SA by HTW Dresden / Peter Sebb, https://de.wikipedia.org/wiki/Hochschule_f%C3%BCr_Technik_und_Wirtschaft_Dresden#/media/Datei:Hochschule_f%C3%BCr_Technik_und_Wirtschaft_(HTW)_Dresden_-_Zentralgeb%C3%A4ude,_Campus_Friedrich_List_Platz.jpg</span>
-<span class="c1">#original_image = imread(&#39;htw-front.jpg&#39;)[885:1509, 1100:1703] # -&gt; palace</span>
-<span class="c1">#original_image = imread(&#39;bvg.jpg&#39;)[::10, ::10] -&gt; palace</span>
-<span class="c1">#original_image = imread(&#39;bvg.jpg&#39;)[2154:2395, 2000:2355]</span>
-<span class="c1">#original_image = resize(imread(&#39;kitchen_cat.jpg&#39;)[256:,256:], (256, 256, 3), preserve_range=True).astype(np.uint8)</span>
-<span class="c1">#stackview.crop(original_image)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">original_image</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="s2">&quot;data/htw-front-cc-by-sa.png&quot;</span><span class="p">)[</span><span class="o">...</span><span class="p">,:</span><span class="mi">3</span><span class="p">]</span>
+
 <span class="n">stackview</span><span class="o">.</span><span class="n">insight</span><span class="p">(</span><span class="n">original_image</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -676,6 +713,7 @@ title="Print to PDF"
 </tr>
 </table></div></div>
 </div>
+<p>Next, we convert this image to a Pytorch tensor, which is required to process it by the neural network.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_tensor</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">()(</span><span class="n">original_image</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -689,39 +727,10 @@ title="Print to PDF"
 </div>
 </div>
 </div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Store the feature maps and gradients</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">GradCAM</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">feature_maps</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gradients</span> <span class="o">=</span> <span class="kc">None</span>
-        
-        <span class="c1"># Register hooks</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Register hooks&quot;</span><span class="p">)</span>
-        <span class="n">target_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layer4</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Last layer of ResNet</span>
-        <span class="n">target_layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_feature_maps</span><span class="p">)</span>
-        <span class="n">target_layer</span><span class="o">.</span><span class="n">register_full_backward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_gradients</span><span class="p">)</span>
-    
-    <span class="k">def</span><span class="w"> </span><span class="nf">save_feature_maps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Storing features&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">feature_maps</span> <span class="o">=</span> <span class="n">output</span>
-    
-    <span class="k">def</span><span class="w"> </span><span class="nf">save_gradients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Storing gradients&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gradients</span> <span class="o">=</span> <span class="n">grad_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">resnet_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
+</section>
+<section id="storing-feature-images-and-gradients">
+<h1>Storing feature images and gradients<a class="headerlink" href="#storing-feature-images-and-gradients" title="Permalink to this heading">#</a></h1>
+<p>In the following code, we register some callback function in the network to be able to access intermediate results of the algorithm such as feature images and gradients. This will slow down processing a bit and is not recommended in production.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">layer1</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">layer2</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">layer3</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">layer4</span><span class="p">]</span>
@@ -742,13 +751,10 @@ title="Print to PDF"
 </div>
 </div>
 </div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#grad_cam = GradCAM(model)</span>
-</pre></div>
-</div>
-</div>
-</div>
+</section>
+<section id="prediction-step">
+<h1>Prediction step<a class="headerlink" href="#prediction-step" title="Permalink to this heading">#</a></h1>
+<p>To visualize what the network is doing, we need to execute it. After this step, the classification result is availale.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
@@ -763,6 +769,24 @@ title="Print to PDF"
 </div>
 </div>
 </div>
+<p>The class index and class name of the classification is:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">class_idx</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+<span class="n">class_idx</span><span class="p">,</span> <span class="n">classes</span><span class="p">[</span><span class="n">class_idx</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(tensor([436]), &#39;beach wagon&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="inspecting-the-intermediate-results">
+<h1>Inspecting the intermediate results<a class="headerlink" href="#inspecting-the-intermediate-results" title="Permalink to this heading">#</a></h1>
+<p>As we stored intermediate results (feature images), we can now visualize them.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">features</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
@@ -775,8 +799,6 @@ title="Print to PDF"
 </div>
 </div>
 </div>
-<section id="inspecting-the-intermediate-results-layer-outputs">
-<h1>Inspecting the intermediate results / layer outputs<a class="headerlink" href="#inspecting-the-intermediate-results-layer-outputs" title="Permalink to this heading">#</a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
@@ -806,49 +828,11 @@ title="Print to PDF"
 <img alt="../_images/dfa12ae6b1d4021e53f7bdfb1c53f0b2bae5499b55ec8977d09350d2060d58e4.png" src="../_images/dfa12ae6b1d4021e53f7bdfb1c53f0b2bae5499b55ec8977d09350d2060d58e4.png" />
 </div>
 </div>
-</section>
-<section id="inspecting-the-output">
-<h1>Inspecting the output<a class="headerlink" href="#inspecting-the-output" title="Permalink to this heading">#</a></h1>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output</span><span class="o">.</span><span class="n">argmax</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor(436)
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">class_idx</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
-<span class="n">class_idx</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([436])
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">classes</span><span class="p">[</span><span class="n">class_idx</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&#39;beach wagon&#39;
-</pre></div>
-</div>
-</div>
-</div>
+<p>The deeper the layer (higher layer number), the less interpretable the images are.</p>
 </section>
 <section id="determining-gradients">
 <h1>Determining gradients<a class="headerlink" href="#determining-gradients" title="Permalink to this heading">#</a></h1>
+<p>To determine the gradients, we use a single back-propagation step using the class we just determined. This is like we would do during training to improve classification quality for this one specific class given this one specific input image.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
@@ -865,10 +849,11 @@ title="Print to PDF"
 </div>
 </div>
 </div>
+<p>We can summarize these gradients to one weight-adaption number for each feature image in the last convolutional layer. The higher this number, the more relevant is the specific feature image for making the classification for this one specific class.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">feature_weights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">gradients</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">feature_weights</span><span class="o">.</span><span class="n">shape</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">weight_adaption</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">gradients</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">weight_adaption</span><span class="o">.</span><span class="n">shape</span>
 </pre></div>
 </div>
 </div>
@@ -880,7 +865,7 @@ title="Print to PDF"
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">feature_weights</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">weight_adaption</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -892,7 +877,7 @@ title="Print to PDF"
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">feature_weights</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">weight_adaption</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -902,6 +887,10 @@ title="Print to PDF"
 </div>
 </div>
 </div>
+</section>
+<section id="summarizing-feature-images">
+<h1>Summarizing feature images<a class="headerlink" href="#summarizing-feature-images" title="Permalink to this heading">#</a></h1>
+<p>For visualization purposes we just show the first feature images of the last/deepest convolutional layer again. These images will be multiplied with the weight-adaptions explained above.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">num_features</span> <span class="o">=</span> <span class="mi">4</span>
@@ -926,12 +915,13 @@ title="Print to PDF"
 <span class="n">cam</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
 <span class="c1"># Multiply weights with feature maps and sum</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">feature_weights</span><span class="p">):</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">weight_adaption</span><span class="p">):</span>
     <span class="n">cam</span> <span class="o">+=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">features</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
 </div>
+<p>After multiplication, these images will be summarized into a single image that shows us where in the specific image the network is <em>looking</em> when checking the speicified class. This is a class-activation map.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">projected_cam</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">cam</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
@@ -959,6 +949,10 @@ title="Print to PDF"
 </tr>
 </table></div></div>
 </div>
+</section>
+<section id="overlay">
+<h1>Overlay<a class="headerlink" href="#overlay" title="Permalink to this heading">#</a></h1>
+<p>To visualize this map on top of the original image, we create an upsampled, interpolated image of it.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">upsampled_cam</span> <span class="o">=</span> <span class="n">resize</span><span class="p">(</span><span class="n">projected_cam</span><span class="p">,</span> <span class="p">(</span><span class="n">original_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">original_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
@@ -986,6 +980,7 @@ title="Print to PDF"
 </tr>
 </table></div></div>
 </div>
+<p>These two images can be visualized on top of each other.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">stackview</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">original_image</span><span class="p">,</span> <span class="n">continue_drawing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -997,6 +992,10 @@ title="Print to PDF"
 <img alt="../_images/c5c4d5512775f39d6e48499bcca8c23cdd7aff92b467075082485af7d196c563.png" src="../_images/c5c4d5512775f39d6e48499bcca8c23cdd7aff92b467075082485af7d196c563.png" />
 </div>
 </div>
+</section>
+<section id="class-activation-maps-for-different-classes">
+<h1>Class activation maps for different classes<a class="headerlink" href="#class-activation-maps-for-different-classes" title="Permalink to this heading">#</a></h1>
+<p>We can compute this visualization also for other classes. To simplify this, we write a Python helper function, which does the same as above.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">show_cam_for_class</span><span class="p">(</span><span class="n">class_name</span><span class="p">):</span>
@@ -1055,7 +1054,11 @@ title="Print to PDF"
 </section>
 <section id="exercise">
 <h1>Exercise<a class="headerlink" href="#exercise" title="Permalink to this heading">#</a></h1>
-<p>What needs to be changed above to make the classification a “car”?</p>
+<p>What needs to be changed above to make sure the classification returns “car”?</p>
+</section>
+<section id="id1">
+<h1>Exercise<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h1>
+<p>Write a Python function that takes an image filename as parameter and returns the class name as string and a corresponding CAM image. Call this function in a loop which iterates over all images in the folder ‘data’.</p>
 </section>
 
     <script type="text/x-thebe-config">
@@ -1118,12 +1121,32 @@ title="Print to PDF"
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#">
-   Inspecting the intermediate results / layer outputs
+   Gradient Class-Activation Maps (Grad-CAM)
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#inspecting-the-output">
-   Inspecting the output
+  <a class="reference internal nav-link" href="#loading-the-model">
+   Loading the model
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#exampele-image-data-for-classification">
+   Exampele image data for classification
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#storing-feature-images-and-gradients">
+   Storing feature images and gradients
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#prediction-step">
+   Prediction step
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#inspecting-the-intermediate-results">
+   Inspecting the intermediate results
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
@@ -1132,7 +1155,27 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#summarizing-feature-images">
+   Summarizing feature images
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#overlay">
+   Overlay
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#class-activation-maps-for-different-classes">
+   Class activation maps for different classes
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#exercise">
+   Exercise
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#id1">
    Exercise
   </a>
  </li>
@@ -1164,7 +1207,7 @@ By Robert Haase
   
   <div class="footer-item">
     <p class="last-updated">
-Last updated on 2025-02-23.<br>
+Last updated on 2025-03-02.<br>
 </p>
   </div>
   
