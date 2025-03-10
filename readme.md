@@ -1,8 +1,8 @@
 # Explainable Artificial Intelligence Notebooks
 
-This repository contains a collection of Python Jupyter notebooks explaining generative artificial intelligence using Python to a broad audience. The content is available at
+This repository contains a collection of Python Jupyter notebooks about explainable artificial intelligence in the context of computer vision. The content is available at
 
-https://scads.github.io/generative-ai-notebooks
+https://haesleinhuepf.github.io/xai
 
 It is maintained using [Jupyter lab](https://jupyterlab.readthedocs.io/en/stable/) and build using [Jupyter book](https://jupyterbook.org/intro.html).
 
